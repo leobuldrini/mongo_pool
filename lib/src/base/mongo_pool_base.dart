@@ -97,7 +97,7 @@ class MongoDbPoolBase extends Observer {
   /// Releases a connection back to the pool.
   void release(Db connection) {
     final connectionInfo = _inUse.firstWhere(
-      (c) => c.connection == connection,
+          (c) => c.connection == connection,
       orElse: () => throw ConnectionNotFountMongoPoolException(),
     );
     _proxyLeakTaskFactory.cancelTask(connectionInfo.leakTask);
@@ -128,8 +128,8 @@ class MongoDbPoolBase extends Observer {
     _lifetimeChecker.updateConnections(allConnections);
   }
 
-  Future<void> openNewConnection(LeakTaskFactory proxyLeakTaskFactory) =>
-      Db.create(_config.uriString).then((conn) async {
+  Future<void> openNewConnection(LeakTaskFactory proxyLeakTaskFactory) async =>
+      await Db.create(_config.uriString).then((conn) async {
         final proxyLeakTask = proxyLeakTaskFactory.createTask(conn);
         final connectionInfo = ConnectionInfo(
           conn,
@@ -140,6 +140,7 @@ class MongoDbPoolBase extends Observer {
           _available.add(
             connectionInfo,
           );
+          _lifetimeChecker.updateConnections(allConnections);
         });
       });
 
@@ -150,13 +151,13 @@ class MongoDbPoolBase extends Observer {
   }
 
   @override
-  void expiredConnectionNotifier(ConnectionInfo connectionInfo) {
+  Future<void> expiredConnectionNotifier(ConnectionInfo connectionInfo) async {
     log('${connectionInfo.createTime} expired. Connection closing connection');
-    closeConnection(connectionInfo);
+    await closeConnection(connectionInfo);
     log('Opening new connection');
     if (allConnections.length < _config.poolSize) {
       log('Available connections less than minPoolSize. Opening new connection');
-      openNewConnection(_proxyLeakTaskFactory);
+      await openNewConnection(_proxyLeakTaskFactory);
     } else {
       log('Available connections greater than minPoolSize. Not opening new connection');
     }

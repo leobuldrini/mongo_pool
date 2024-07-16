@@ -6,11 +6,12 @@ import 'package:mongo_pool/src/model/connection_info_model.dart';
 
 class LifetimeChecker extends PoolObservable {
   LifetimeChecker(
-      this._allConnections, this._maxLifetimeMilliseconds, this._poolSize)
+      this._allConnections, this._maxLifetimeMilliseconds, this._poolSize,)
       : super();
 
   List<ConnectionInfo> _allConnections;
   final int _maxLifetimeMilliseconds;
+  //ignore: unused_field
   final int _poolSize;
 
   void startChecking() {
@@ -22,10 +23,9 @@ class LifetimeChecker extends PoolObservable {
       for (final connInfo in _allConnections) {
         final elapsedMilliseconds =
             now.difference(connInfo.lastUse).inMilliseconds;
-        if (((elapsedMilliseconds >= _maxLifetimeMilliseconds &&
-                    !connInfo.inUse) ||
-                connInfo.leakTask.state.isLeaked) &&
-            _allConnections.length - expiredConnections.length > _poolSize) {
+        if ((elapsedMilliseconds >= _maxLifetimeMilliseconds &&
+            !connInfo.inUse) ||
+            connInfo.leakTask.state.isLeaked) {
           expiredConnections.add(connInfo);
         }
       }
@@ -38,7 +38,7 @@ class LifetimeChecker extends PoolObservable {
   }
 
   Future<void> _closeConnection(ConnectionInfo connectionInfo) async {
-    notifyExpire(connectionInfo);
+    await notifyExpire(connectionInfo);
   }
 
   // ignore: use_setters_to_change_properties

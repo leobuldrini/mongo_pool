@@ -20,9 +20,9 @@ abstract class PoolObservable {
   }
 
   ///  Notify all observers
-  void notifyExpire(ConnectionInfo connectionInfo) {
+  Future<void> notifyExpire(ConnectionInfo connectionInfo) async {
     _observers?.forEach(
-      (observer) => observer.expiredConnectionNotifier(connectionInfo),
+          (observer) async => await observer.expiredConnectionNotifier(connectionInfo),
     );
   }
 }
@@ -30,5 +30,5 @@ abstract class PoolObservable {
 class Observer {
   Observer();
 
-  void expiredConnectionNotifier(ConnectionInfo connectionInfo) {}
+  Future<void> expiredConnectionNotifier(ConnectionInfo connectionInfo) async {}
 }
